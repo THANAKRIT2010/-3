@@ -1,0 +1,348 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- System Audio
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    local fakeSound = Instance.new("Sound")
+    fakeSound.Name = "SystemAudio"
+    fakeSound.Volume = 0
+    fakeSound.Looped = true
+    fakeSound.Parent = newChar
+end)
+
+local CorrectKey = "1669"
+local SavedInput = ""
+local Unlocked = false
+
+-- =========================
+--      CREATE WINDOW
+-- =========================
+local Window = Fluent:CreateWindow({
+    Title = "TK669 ไม่อนุญาติให้ไปเเจกต่อ",
+    SubTitle = "Script Premium💯",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-- =========================
+--        KEY TAB
+-- =========================
+local KeyTab = Window:AddTab({ Title = "Key System", Icon = "key" })
+
+KeyTab:AddInput("KeyInput", {
+    Title = "ใส่ Key",
+    Placeholder = "Enter key...",
+    Callback = function(text)
+        SavedInput = text
+    end
+})
+
+-- =========================
+--      LOAD MAIN SYSTEM
+-- =========================
+local function LoadMain()
+    if Unlocked then return end
+    Unlocked = true
+
+    -- 1. PLAYER TAB
+    local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
+    
+    PlayerTab:AddButton({
+        Title = "รีเซ็ตตัวละคร",
+        Callback = function()
+            if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
+        end
+    })
+
+    -- ESP Logic
+    local ESPEnabled, NameEnabled, DistanceEnabled, TracerEnabled = false, false, false, false
+    local ESPObjects = {}
+
+    local function CreateESP(player)
+        if player == LocalPlayer then return end
+        local function Setup(character)
+            local hrp = character:WaitForChild("HumanoidRootPart", 10)
+            if not hrp then return end
+            
+            local highlight = Instance.new("Highlight")
+            highlight.FillTransparency = 1
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.Parent = character
+            
+            local bill = Instance.new("BillboardGui")
+            bill.Size = UDim2.new(0, 120, 0, 30)
+            bill.StudsOffset = Vector3.new(0, 2.8, 0)
+            bill.AlwaysOnTop = true
+            bill.Parent = hrp
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 14
+            label.Parent = bill
+            
+            local tracer = Drawing.new("Line")
+            tracer.Thickness = 1.5
+            tracer.Color = Color3.new(1, 1, 1)
+            
+            ESPObjects[player] = {Highlight = highlight, Billboard = bill, Label = label, Tracer = tracer, HRP = hrp}
+        end
+        if player.Character then Setup(player.Character) end
+        player.CharacterAdded:Connect(Setup)
+    end
+
+    for _, plr in pairs(Players:GetPlayers()) do CreateESP(plr) end
+    Players.PlayerAdded:Connect(CreateESP)
+
+    RunService.RenderStepped:Connect(function()
+        for player, data in pairs(ESPObjects) do
+            if player.Character and data.HRP and data.HRP.Parent then
+                local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - data.HRP.Position).Magnitude)
+                local text = ""
+                if NameEnabled then text = player.Name end
+                if DistanceEnabled then text = text .. (text ~= "" and " " or "") .. "[" .. dist .. "m]" end
+                
+                data.Label.Text = text
+                data.Highlight.Enabled = ESPEnabled
+                data.Billboard.Enabled = (NameEnabled or DistanceEnabled)
+                
+                if TracerEnabled then
+                    local pos, onScreen = Camera:WorldToViewportPoint(data.HRP.Position)
+                    if onScreen then
+                        data.Tracer.Visible = true
+                        data.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        data.Tracer.To = Vector2.new(pos.X, pos.Y)
+                    else data.Tracer.Visible = false end
+                else data.Tracer.Visible = false end
+            else
+                if data.Tracer then data.Tracer.Visible = false end
+            end
+        end
+    end)
+
+    PlayerTab:AddToggle("ESPTog", {Title = "เปิดกรอบผู้เล่น", Default = false, Callback = function(v) ESPEnabled = v end})
+    PlayerTab:AddToggle("NameTog", {Title = "เปิดชื่อ", Default = false, Callback = function(v) NameEnabled = v end})
+    PlayerTab:AddToggle("DistTog", {Title = "เปิดระยะ", Default = false, Callback = function(v) DistanceEnabled = v end})
+    PlayerTab:AddToggle("TracerTog", {Title = "เปิดเส้นโยง", Default = false, Callback = function(v) TracerEnabled = v end})
+
+    -- 2. SCRIPTS TAB
+    local ScriptTab = Window:AddTab({ Title = "Scripts", Icon = "code" })
+    ScriptTab:AddButton({ Title = "AUTO มันนี่💵", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/Thai-2/refs/heads/main/TK1669", true))() end })
+    ScriptTab:AddButton({ Title = "BOOTS FPS🍃", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Boostfps-26436"))() end })
+    ScriptTab:AddButton({ Title = "SET TELEPORT📍", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqthanakrit99-code/-/refs/heads/main/%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B2%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B8%E0%B8%94%E0%B8%A7%E0%B8%B2%E0%B8%9B", true))() end })
+    ScriptTab:AddButton({ Title = "AUTO TOOL⚡", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/-3/refs/heads/main/%E0%B8%A5%E0%B9%87%E0%B8%AD%E0%B8%81%20AUTO%20TOOL"))() end })
+
+    -- 3. SPEED TAB
+    local SpeedTab = Window:AddTab({ Title = "Speed", Icon = "zap" })
+    local SpeedEnabled, CurrentSpeed = false, 16
+    local TPWalkEnabled, TPWalkSpeed = false, 6
+    local InfiniteJumpEnabled = false
+    local currentVelocity = Vector3.new()
+
+    SpeedTab:AddToggle("SpeedTog", {Title = "เปิด WalkSpeed", Default = false, Callback = function(v) SpeedEnabled = v end})
+    SpeedTab:AddSlider("SpeedSlider", {Title = "ปรับความเร็ว", Min = 16, Max = 250, Default = 16, Rounding = 1, Callback = function(v) CurrentSpeed = v end})
+    SpeedTab:AddToggle("TPWalkTog", {Title = "เปิด TPWalk (สมูท)", Default = false, Callback = function(v) TPWalkEnabled = v end})
+    SpeedTab:AddSlider("TPWalkSlider", {Title = "ความเร็ว TPWalk", Min = 1, Max = 30, Default = 6, Rounding = 1, Callback = function(v) TPWalkSpeed = v end})
+    SpeedTab:AddToggle("InfJumpTog", {Title = "เปิดกระโดดไม่จำกัด", Default = false, Callback = function(v) InfiniteJumpEnabled = v end})
+
+    RunService.RenderStepped:Connect(function(dt)
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if hum and hrp then
+            if SpeedEnabled then hum.WalkSpeed = CurrentSpeed else hum.WalkSpeed = 16 end
+            if TPWalkEnabled and hum.MoveDirection.Magnitude > 0 then
+                local targetVelocity = hum.MoveDirection.Unit * TPWalkSpeed
+                currentVelocity = currentVelocity:Lerp(targetVelocity, 0.15)
+                hrp.CFrame = hrp.CFrame + (currentVelocity * dt * 60)
+            else currentVelocity = Vector3.new() end
+        end
+    end)
+
+    UserInputService.JumpRequest:Connect(function()
+        if InfiniteJumpEnabled then
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+        end
+    end)
+
+    -- 4. TELEPORT TAB
+    local TeleportTab = Window:AddTab({ Title = "Teleport", Icon = "map-pin" })
+    local SelectedTPPlayer = nil
+    local function GetPlayers() local t = {} for _,p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(t, p.Name) end end return t end
+
+    local PlayerDrop = TeleportTab:AddDropdown("TPDrop", {
+        Title = "เลือกผู้เล่น",
+        Values = GetPlayers(),
+        Callback = function(v) SelectedTPPlayer = Players:FindFirstChild(v) end
+    })
+    
+    Players.PlayerAdded:Connect(function() PlayerDrop:SetValues(GetPlayers()) end)
+    Players.PlayerRemoving:Connect(function() PlayerDrop:SetValues(GetPlayers()) end)
+
+    TeleportTab:AddButton({ Title = "วาปไปหาผู้เล่น", Callback = function() if SelectedTPPlayer and SelectedTPPlayer.Character then LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedTPPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-3) end end })
+    TeleportTab:AddButton({ Title = "มองจอผู้เล่น", Callback = function() if SelectedTPPlayer and SelectedTPPlayer.Character then Camera.CameraSubject = SelectedTPPlayer.Character:FindFirstChildOfClass("Humanoid") end end })
+    TeleportTab:AddButton({ Title = "ยกเลิกมองจอ", Callback = function() if LocalPlayer.Character then Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end end })
+
+    -- 5. SIT PLAYER TAB
+    local SitTab = Window:AddTab({ Title = "Sit Player", Icon = "user" })
+    local SelectedSitPlayer = nil
+    local SitType = "Head"
+    local AlignPos, AlignOri, MyAttachment, TargetAttachment
+
+    local function StopSit()
+        if AlignPos then AlignPos:Destroy() AlignPos = nil end
+        if AlignOri then AlignOri:Destroy() AlignOri = nil end
+        if MyAttachment then MyAttachment:Destroy() MyAttachment = nil end
+        if TargetAttachment then TargetAttachment:Destroy() TargetAttachment = nil end
+    end
+
+    local function StartSit()
+        StopSit()
+        if not (SelectedSitPlayer and SelectedSitPlayer.Character and LocalPlayer.Character) then return end
+        local targetHRP = SelectedSitPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myChar = LocalPlayer.Character
+        local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+        local myHum = myChar:FindFirstChildOfClass("Humanoid")
+        if not (targetHRP and myHRP and myHum) then return end
+
+        myHum.Sit = true
+        myHum:ChangeState(Enum.HumanoidStateType.Seated)
+        MyAttachment = Instance.new("Attachment", myHRP)
+        TargetAttachment = Instance.new("Attachment", targetHRP)
+
+        if SitType == "Head" then
+            TargetAttachment.Position = Vector3.new(0, 2.5, 0)
+        elseif SitType == "Back" then
+            TargetAttachment.Position = Vector3.new(0, 0.5, -1.2)
+            TargetAttachment.Orientation = Vector3.new(0, 180, 0)
+        end
+
+        AlignPos = Instance.new("AlignPosition", myHRP)
+        AlignPos.Attachment0, AlignPos.Attachment1 = MyAttachment, TargetAttachment
+        AlignPos.RigidityEnabled = true
+
+        AlignOri = Instance.new("AlignOrientation", myHRP)
+        AlignOri.Attachment0, AlignOri.Attachment1 = MyAttachment, TargetAttachment
+        AlignOri.RigidityEnabled = true
+    end
+
+    local SitPlayerDrop = SitTab:AddDropdown("SitDrop", {
+        Title = "เลือกผู้เล่น",
+        Values = GetPlayers(),
+        Callback = function(v) SelectedSitPlayer = Players:FindFirstChild(v) end
+    })
+
+    task.spawn(function()
+        while true do task.wait(2) SitPlayerDrop:SetValues(GetPlayers()) end
+    end)
+
+    SitTab:AddButton({ Title = "นั่งบนหัว 🪑", Callback = function() SitType = "Head" StartSit() end })
+    SitTab:AddButton({ Title = "นั่งติดหลัง 🔙", Callback = function() SitType = "Back" StartSit() end })
+    SitTab:AddButton({ Title = "หยุดนั่ง ❌", Callback = function() StopSit() end })
+
+    -- 6. SERVER HOP TAB
+    local HopTab = Window:AddTab({ Title = "Server Hop", Icon = "server" })
+    local function HopToLowServer()
+        local HttpService = game:GetService("HttpService")
+        local response = game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+        local data = HttpService:JSONDecode(response)
+        if data and data.data then
+            for _, server in pairs(data.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
+                    return
+                end
+            end
+        end
+    end
+
+    HopTab:AddSection("Server Manager")
+    HopTab:AddButton({
+        Title = "🌑 Join Low Player Server",
+        Callback = function()
+            Window:Dialog({
+                Title = "ย้ายเซิร์ฟเวอร์",
+                Content = "ต้องการย้ายไปห้องคนน้อยใช่ไหม?",
+                Buttons = {
+                    { Title = "ยืนยัน", Callback = HopToLowServer },
+                    { Title = "ยกเลิก" }
+                }
+            })
+        end
+    })
+
+    -- 7. CONTACT TAB
+    local ContactTab = Window:AddTab({ Title = "Contact", Icon = "phone" })
+    ContactTab:AddButton({ Title = "รีเข้าแมพ", Callback = function() TeleportService:Teleport(game.PlaceId) end })
+    ContactTab:AddButton({ Title = "Discord", Callback = function() setclipboard("https://discord.gg/XKJTssDUSR") end })
+    ContactTab:AddButton({ Title = "Instagram", Callback = function() setclipboard("https://www.instagram.com/ezmxyxii/") end })
+end
+
+-- =========================
+--      KEY BUTTON
+-- =========================
+KeyTab:AddButton({
+    Title = "ยืนยันคีย์",
+    Callback = function()
+        if SavedInput == CorrectKey then
+            Fluent:Notify({ Title = "สำเร็จ", Content = "Key ถูกต้อง ✅", Duration = 2 })
+            LoadMain()
+        else
+            Fluent:Notify({ Title = "ผิดพลาด", Content = "Key ไม่ถูกต้อง ❌", Duration = 3 })
+        end
+    end
+})
+
+-- =========================
+--   FLOAT LOGO TOGGLE UI
+-- =========================
+pcall(function() if game.CoreGui:FindFirstChild("TK669_TOGGLE") then game.CoreGui.TK669_TOGGLE:Destroy() end end)
+local ToggleGui = Instance.new("ScreenGui", game.CoreGui)
+ToggleGui.Name = "TK669_TOGGLE"
+
+local ToggleBtn = Instance.new("ImageButton", ToggleGui)
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0.5, -25, 0, 20)
+ToggleBtn.BackgroundTransparency = 1
+ToggleBtn.Image = "rbxassetid://73593540273101"
+
+local dragging, dragInput, dragStart, startPos
+ToggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleBtn.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+ToggleBtn.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+local UIVisible = false
+ToggleBtn.MouseButton1Click:Connect(function()
+    UIVisible = not UIVisible
+    Window:Minimize(UIVisible)
+end)
+
+Window:SelectTab(1)
+Fluent:Notify({Title = "Server Utility", Content = "UI พร้อมใช้งานแล้วครับพี่!", Duration = 3})
