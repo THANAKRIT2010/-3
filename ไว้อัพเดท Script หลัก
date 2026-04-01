@@ -141,6 +141,8 @@ local function LoadMain()
     ScriptTab:AddButton({ Title = "AUTO มันนี่💵", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/Thai-2/refs/heads/main/TK1669", true))() end })
     ScriptTab:AddButton({ Title = "BOOTS FPS🍃", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Boostfps-26436"))() end })
     ScriptTab:AddButton({ Title = "SET TELEPORT📍", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqthanakrit99-code/-/refs/heads/main/%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B8%E0%B8%94%E0%B8%A7%E0%B8%B2%E0%B8%9B", true))() end })
+    ScriptTab:AddButton({ Title = "AUTO TOOL⚡", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/-3/refs/heads/main/%E0%B8%A5%E0%B9%87%E0%B8%AD%E0%B8%81%20AUTO%20TOOL"))() end })
+
 
     -- 3. SPEED TAB
     local SpeedTab = Window:AddTab({ Title = "Speed", Icon = "zap" })
@@ -298,4 +300,3 @@ Window:SelectTab(1)
 Fluent:Notify({Title = "Server Utility", Content = "UI พร้อมใช้งานแล้วครับพี่!", Duration = 3})
 
 Window:SelectTab(1)
-
