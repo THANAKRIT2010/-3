@@ -1,1 +1,62 @@
 
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+repeat task.wait() until workspace:FindFirstChildOfClass("Camera")
+
+task.wait(1)
+
+local myScript = "https://raw.githubusercontent.com/THANAKRIT2010/-3/refs/heads/main/%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B9%82%E0%B8%94%E0%B8%99%E0%B8%94%E0%B8%B9%E0%B8%94%E0%B8%AA%E0%B8%84%E0%B8%A3%E0%B8%B4%E0%B8%9B%20V1"
+
+local SupportedGames = {
+    ["4503309821"] = myScript
+}
+
+local scriptUrl = SupportedGames[tostring(game.PlaceId)]
+
+if not scriptUrl then
+    LocalPlayer:Kick("❌ Map นี้ยังไม่รองรับ TK 1669")
+    return
+end
+
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification",{
+        Title = "TK 1669",
+        Text = "Loading Script...",
+        Duration = 5
+    })
+end)
+
+local success = false
+local tries = 0
+
+while not success and tries < 3 do
+    tries = tries + 1 
+
+    local ok, result = pcall(function()
+        return game:HttpGet(scriptUrl)
+    end)
+
+    if ok and result then
+        success = true
+
+        pcall(function()
+            loadstring(result)()
+        end)
+    else
+        task.wait(2)
+    end
+end
+
+if not success then
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "❌ Loader Failed",
+            Text = "โหลดไม่สำเร็จ",
+            Duration = 5
+        })
+    end)
+end
