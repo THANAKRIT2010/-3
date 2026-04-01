@@ -1,0 +1,455 @@
+-- LocalScript (StarterPlayerScripts)
+
+--== Services & Player ==--
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+
+--== ScreenGui ==--
+local gui = Instance.new("ScreenGui")
+gui.Name = "AutoToolGUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--== Main Frame ==--
+local main = Instance.new("Frame")
+main.Name = "MainFrame"
+main.Size = UDim2.new(0, 380, 0, 280)
+main.Position = UDim2.new(0.5, -190, 0.5, -140)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.Parent = gui
+
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 16)
+
+-- Animated Rainbow Stroke
+local stroke = Instance.new("UIStroke", main)
+stroke.Thickness = 3
+stroke.Color = Color3.fromRGB(255, 0, 255)
+stroke.Transparency = 0
+
+-- Rainbow Animation
+task.spawn(function()
+	local hue = 0
+	while gui.Parent do
+		hue = (hue + 0.005) % 1
+		stroke.Color = Color3.fromHSV(hue, 1, 1)
+		task.wait()
+	end
+end)
+
+-- Gradient Background
+local grad = Instance.new("UIGradient", main)
+grad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 35)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 15)),
+})
+grad.Rotation = 45
+
+-- Glow Shadow
+local glow = Instance.new("ImageLabel")
+glow.Name = "Glow"
+glow.BackgroundTransparency = 1
+glow.Image = "rbxassetid://5028857084"
+glow.ImageColor3 = Color3.fromRGB(150, 0, 255)
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(24,24,276,276)
+glow.Size = UDim2.new(1, 60, 1, 60)
+glow.Position = UDim2.new(0, -30, 0, -30)
+glow.ImageTransparency = 0.3
+glow.ZIndex = 0
+glow.Parent = main
+
+-- Pulsing Glow Animation
+task.spawn(function()
+	while gui.Parent do
+		TweenService:Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			ImageTransparency = 0.6
+		}):Play()
+		task.wait(1.5)
+	end
+end)
+
+--== Header Bar ==--
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 50)
+header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+header.BorderSizePixel = 0
+header.ZIndex = 2
+header.Parent = main
+
+local headerCorner = Instance.new("UICorner", header)
+headerCorner.CornerRadius = UDim.new(0, 16)
+
+-- Mask Bottom
+local headerMask = Instance.new("Frame")
+headerMask.Size = UDim2.new(1, 0, 0, 16)
+headerMask.Position = UDim2.new(0, 0, 1, -16)
+headerMask.BackgroundColor3 = header.BackgroundColor3
+headerMask.BorderSizePixel = 0
+headerMask.ZIndex = 2
+headerMask.Parent = header
+
+-- Title with Icon
+local headerTitle = Instance.new("TextLabel")
+headerTitle.BackgroundTransparency = 1
+headerTitle.Size = UDim2.new(1, -100, 1, 0)
+headerTitle.Position = UDim2.new(0, 16, 0, 0)
+headerTitle.Font = Enum.Font.GothamBold
+headerTitle.Text = "⚡ AUTO TOOL"
+headerTitle.TextSize = 24
+headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+headerTitle.TextStrokeTransparency = 0.5
+headerTitle.ZIndex = 3
+headerTitle.Parent = header
+
+-- Minimize Button (-) 🔥 แก้ให้เด่นชัด
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Name = "Minimize"
+minimizeBtn.Size = UDim2.new(0, 36, 0, 36)
+minimizeBtn.Position = UDim2.new(1, -88, 0.5, -18)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 180, 0) -- เปลี่ยนเป็นส้มสด
+minimizeBtn.Text = "—"
+minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0) -- ตัวอักษรสีดำเพื่อความชัด
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 24
+minimizeBtn.AutoButtonColor = false
+minimizeBtn.ZIndex = 4 -- 🔥 ZIndex สูงสุดเพื่อไม่โดนบัง
+minimizeBtn.Parent = header
+
+local minimizeCorner = Instance.new("UICorner", minimizeBtn)
+minimizeCorner.CornerRadius = UDim.new(1, 0)
+
+-- เพิ่ม Stroke ให้เด่นขึ้น
+local minimizeStroke = Instance.new("UIStroke", minimizeBtn)
+minimizeStroke.Thickness = 2
+minimizeStroke.Color = Color3.fromRGB(255, 220, 100)
+minimizeStroke.Transparency = 0
+
+-- Minimize Hover Effect
+minimizeBtn.MouseEnter:Connect(function()
+	TweenService:Create(minimizeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 220, 50),
+		Size = UDim2.new(0, 40, 0, 40)
+	}):Play()
+	TweenService:Create(minimizeStroke, TweenInfo.new(0.2), {
+		Thickness = 3,
+		Color = Color3.fromRGB(255, 255, 150)
+	}):Play()
+end)
+minimizeBtn.MouseLeave:Connect(function()
+	TweenService:Create(minimizeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 180, 0),
+		Size = UDim2.new(0, 36, 0, 36)
+	}):Play()
+	TweenService:Create(minimizeStroke, TweenInfo.new(0.2), {
+		Thickness = 2,
+		Color = Color3.fromRGB(255, 220, 100)
+	}):Play()
+end)
+
+-- Close Button (X)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Name = "Close"
+closeBtn.Size = UDim2.new(0, 36, 0, 36)
+closeBtn.Position = UDim2.new(1, -44, 0.5, -18)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 80)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 20
+closeBtn.AutoButtonColor = false
+closeBtn.ZIndex = 4
+closeBtn.Parent = header
+
+local closeCorner = Instance.new("UICorner", closeBtn)
+closeCorner.CornerRadius = UDim.new(1, 0)
+
+-- Close Button Hover Effect
+closeBtn.MouseEnter:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 80, 110),
+		Size = UDim2.new(0, 40, 0, 40)
+	}):Play()
+end)
+closeBtn.MouseLeave:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 50, 80),
+		Size = UDim2.new(0, 36, 0, 36)
+	}):Play()
+end)
+
+--== Dragging ==--
+do
+	local dragging = false
+	local dragStart, startPos
+	header.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = main.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+--== Profile Section ==--
+local profileFrame = Instance.new("Frame")
+profileFrame.Size = UDim2.new(1, -32, 0, 80)
+profileFrame.Position = UDim2.new(0, 16, 0, 66)
+profileFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+profileFrame.BorderSizePixel = 0
+profileFrame.Parent = main
+local profileCorner = Instance.new("UICorner", profileFrame)
+profileCorner.CornerRadius = UDim.new(0, 12)
+
+local avatar = Instance.new("ImageLabel")
+avatar.Name = "Avatar"
+avatar.Size = UDim2.new(0, 64, 0, 64)
+avatar.Position = UDim2.new(0, 8, 0.5, -32)
+avatar.BackgroundTransparency = 1
+avatar.Parent = profileFrame
+local avatarCorner = Instance.new("UICorner", avatar)
+avatarCorner.CornerRadius = UDim.new(1, 0)
+
+local avatarStroke = Instance.new("UIStroke", avatar)
+avatarStroke.Thickness = 2
+avatarStroke.Color = Color3.fromRGB(150, 0, 255)
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.BackgroundTransparency = 1
+nameLabel.Position = UDim2.new(0, 84, 0.5, -15)
+nameLabel.Size = UDim2.new(1, -96, 0, 30)
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.Text = "🎮 " .. player.Name
+nameLabel.TextSize = 20
+nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.TextStrokeTransparency = 0.7
+nameLabel.Parent = profileFrame
+
+local thumb = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+avatar.Image = thumb
+
+--== iOS-Style Toggle Switch ==--
+local toggleFrame = Instance.new("Frame")
+toggleFrame.Size = UDim2.new(0, 180, 0, 60)
+toggleFrame.Position = UDim2.new(0.5, -90, 0, 160)
+toggleFrame.BackgroundTransparency = 1
+toggleFrame.Parent = main
+
+local toggleBg = Instance.new("Frame")
+toggleBg.Size = UDim2.new(1, 0, 0, 36)
+toggleBg.Position = UDim2.new(0.5, 0, 0.5, 0)
+toggleBg.AnchorPoint = Vector2.new(0.5, 0.5)
+toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+toggleBg.BorderSizePixel = 0
+toggleBg.Parent = toggleFrame
+local toggleBgCorner = Instance.new("UICorner", toggleBg)
+toggleBgCorner.CornerRadius = UDim.new(1, 0)
+
+local toggleCircle = Instance.new("Frame")
+toggleCircle.Size = UDim2.new(0, 28, 0, 28)
+toggleCircle.Position = UDim2.new(0, 4, 0.5, -14)
+toggleCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+toggleCircle.BorderSizePixel = 0
+toggleCircle.Parent = toggleBg
+local toggleCircleCorner = Instance.new("UICorner", toggleCircle)
+toggleCircleCorner.CornerRadius = UDim.new(1, 0)
+
+local toggleLabel = Instance.new("TextLabel")
+toggleLabel.Size = UDim2.new(1, 0, 0, 20)
+toggleLabel.Position = UDim2.new(0, 0, 1, 4)
+toggleLabel.BackgroundTransparency = 1
+toggleLabel.Text = "OFF"
+toggleLabel.Font = Enum.Font.GothamBold
+toggleLabel.TextSize = 18
+toggleLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+toggleLabel.Parent = toggleFrame
+
+--== Speed Input ==--
+local speedFrame = Instance.new("Frame")
+speedFrame.Size = UDim2.new(0, 180, 0, 40)
+speedFrame.Position = UDim2.new(0.5, -90, 0, 228)
+speedFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+speedFrame.BorderSizePixel = 0
+speedFrame.Parent = main
+local speedCorner = Instance.new("UICorner", speedFrame)
+speedCorner.CornerRadius = UDim.new(0, 10)
+
+local speedIcon = Instance.new("TextLabel")
+speedIcon.Size = UDim2.new(0, 30, 1, 0)
+speedIcon.BackgroundTransparency = 1
+speedIcon.Text = "⚡"
+speedIcon.TextSize = 20
+speedIcon.Parent = speedFrame
+
+local speedBox = Instance.new("TextBox")
+speedBox.Name = "SpeedBox"
+speedBox.Size = UDim2.new(1, -35, 1, 0)
+speedBox.Position = UDim2.new(0, 35, 0, 0)
+speedBox.BackgroundTransparency = 1
+speedBox.PlaceholderText = "หน่วง (วินาที)"
+speedBox.Text = "0.2"
+speedBox.ClearTextOnFocus = false
+speedBox.Font = Enum.Font.Gotham
+speedBox.TextSize = 16
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedBox.TextXAlignment = Enum.TextXAlignment.Left
+speedBox.Parent = speedFrame
+
+--== Footer ==--
+local footer = Instance.new("TextLabel")
+footer.BackgroundTransparency = 1
+footer.Size = UDim2.new(1, -20, 0, 20)
+footer.Position = UDim2.new(0, 10, 1, -26)
+footer.Font = Enum.Font.GothamBold
+footer.Text = "💀 by:TOU"
+footer.TextColor3 = Color3.fromRGB(150, 150, 170)
+footer.TextSize = 14
+footer.TextXAlignment = Enum.TextXAlignment.Right
+footer.Parent = main
+
+--== Minimize Logic ==--
+local isMinimized = false
+local normalSize = UDim2.new(0, 380, 0, 280)
+local minimizedSize = UDim2.new(0, 380, 0, 50)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	
+	if isMinimized then
+		-- ย่อลง
+		TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = minimizedSize
+		}):Play()
+		minimizeBtn.Text = "▼"
+	else
+		-- ขยายกลับ
+		TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = normalSize
+		}):Play()
+		minimizeBtn.Text = "—"
+	end
+end)
+
+--== Logic: Auto Tool Runner ==--
+local running = false
+local currentTool
+local cachedRemotes = {}
+local cachedFunctions = {}
+
+local function getDelay()
+	local v = tonumber(speedBox.Text)
+	if not v or v ~= v then return 0.2 end
+	return math.clamp(v, 0.03, 5)
+end
+
+local function cacheRemotes(tool)
+	cachedRemotes = {}
+	cachedFunctions = {}
+	if not tool then return end
+	for _, d in ipairs(tool:GetDescendants()) do
+		if d:IsA("RemoteEvent") then
+			table.insert(cachedRemotes, d)
+		elseif d:IsA("RemoteFunction") then
+			table.insert(cachedFunctions, d)
+		end
+	end
+end
+
+local function fireMouseClick()
+	pcall(function()
+		VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+		task.wait(0.03)
+		VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+	end)
+end
+
+local function useToolLoop()
+	while running do
+		local char = player.Character
+		local tool = char and char:FindFirstChildOfClass("Tool")
+
+		if tool ~= currentTool then
+			currentTool = tool
+			cacheRemotes(currentTool)
+		end
+
+		if tool then
+			pcall(function() tool:Activate() end)
+			fireMouseClick()
+			for _, re in ipairs(cachedRemotes) do
+				pcall(function() re:FireServer() end)
+			end
+			for _, rf in ipairs(cachedFunctions) do
+				pcall(function() rf:InvokeServer() end)
+			end
+		end
+
+		task.wait(getDelay())
+	end
+end
+
+-- Toggle Button Logic
+toggleFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		running = not running
+		
+		if running then
+			-- ON State
+			TweenService:Create(toggleBg, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(80, 200, 120)}):Play()
+			TweenService:Create(toggleCircle, TweenInfo.new(0.3), {
+				Position = UDim2.new(1, -32, 0.5, -14),
+				BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			}):Play()
+			toggleLabel.Text = "ON"
+			toggleLabel.TextColor3 = Color3.fromRGB(80, 255, 140)
+			task.spawn(useToolLoop)
+		else
+			-- OFF State
+			TweenService:Create(toggleBg, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+			TweenService:Create(toggleCircle, TweenInfo.new(0.3), {
+				Position = UDim2.new(0, 4, 0.5, -14),
+				BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+			}):Play()
+			toggleLabel.Text = "OFF"
+			toggleLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+		end
+	end
+end)
+
+-- Close Button
+closeBtn.MouseButton1Click:Connect(function()
+	running = false
+	TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+	task.wait(0.3)
+	gui:Destroy()
+end)
+
+-- Speed Validation
+speedBox.FocusLost:Connect(function()
+	local n = tonumber(speedBox.Text)
+	if not n then
+		speedBox.Text = "0.2"
+	else
+		speedBox.Text = tostring(math.clamp(n, 0.03, 5))
+	end
+end)
