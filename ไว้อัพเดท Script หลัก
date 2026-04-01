@@ -144,28 +144,57 @@ local function LoadMain()
     ScriptTab:AddButton({ Title = "AUTO TOOL⚡", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/-3/refs/heads/main/%E0%B8%A5%E0%B9%87%E0%B8%AD%E0%B8%81%20AUTO%20TOOL"))() end })
 
 
-    -- 3. SPEED TAB
-    local SpeedTab = Window:AddTab({ Title = "Speed", Icon = "zap" })
+ local SpeedTab = Window:AddTab({ Title = "Speed", Icon = "zap" })
     local SpeedEnabled, CurrentSpeed = false, 16
     local TPWalkEnabled, TPWalkSpeed = false, 6
+    local InfiniteJumpEnabled = false -- ตัวแปรสำหรับกระโดดไม่จำกัด
     local currentVelocity = Vector3.new()
 
+    -- UI ส่วนของ Speed
     SpeedTab:AddToggle("SpeedTog", {Title = "เปิด WalkSpeed", Default = false, Callback = function(v) SpeedEnabled = v end})
     SpeedTab:AddSlider("SpeedSlider", {Title = "ปรับความเร็ว", Min = 16, Max = 250, Default = 16, Rounding = 1, Callback = function(v) CurrentSpeed = v end})
+    
+    -- UI ส่วนของ TPWalk
     SpeedTab:AddToggle("TPWalkTog", {Title = "เปิด TPWalk (สมูท)", Default = false, Callback = function(v) TPWalkEnabled = v end})
     SpeedTab:AddSlider("TPWalkSlider", {Title = "ความเร็ว TPWalk", Min = 1, Max = 30, Default = 6, Rounding = 1, Callback = function(v) TPWalkSpeed = v end})
 
+    -- UI ส่วนของ Infinite Jump (ที่เพิ่มใหม่)
+    SpeedTab:AddToggle("InfJumpTog", {Title = "เปิดกระโดดไม่จำกัด", Default = false, Callback = function(v) InfiniteJumpEnabled = v end})
+
+    -- ระบบ WalkSpeed และ TPWalk
     RunService.RenderStepped:Connect(function(dt)
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
         if hum and hrp then
-            if SpeedEnabled then hum.WalkSpeed = CurrentSpeed else hum.WalkSpeed = 16 end
+            -- จัดการ WalkSpeed
+            if SpeedEnabled then 
+                hum.WalkSpeed = CurrentSpeed 
+            else 
+                hum.WalkSpeed = 16 
+            end
+            
+            -- จัดการ TPWalk
             if TPWalkEnabled and hum.MoveDirection.Magnitude > 0 then
                 local targetVelocity = hum.MoveDirection.Unit * TPWalkSpeed
                 currentVelocity = currentVelocity:Lerp(targetVelocity, 0.15)
                 hrp.CFrame = hrp.CFrame + (currentVelocity * dt * 60)
-            else currentVelocity = Vector3.new() end
+            else 
+                currentVelocity = Vector3.new() 
+            end
+        end
+    end)
+
+    -- ระบบ Infinite Jump (ใช้ UserInputService เพื่อความเสถียร)
+    local UserInputService = game:GetService("UserInputService")
+    UserInputService.JumpRequest:Connect(function()
+        if InfiniteJumpEnabled then
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end
     end)
 
