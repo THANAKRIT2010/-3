@@ -17,10 +17,6 @@ LocalPlayer.CharacterAdded:Connect(function(newChar)
     fakeSound.Parent = newChar
 end)
 
-local CorrectKey = "1669"
-local SavedInput = ""
-local Unlocked = false
-
 -- =========================
 --      CREATE WINDOW
 -- =========================
@@ -35,24 +31,9 @@ local Window = Fluent:CreateWindow({
 })
 
 -- =========================
---        KEY TAB
--- =========================
-local KeyTab = Window:AddTab({ Title = "Key System", Icon = "key" })
-
-KeyTab:AddInput("KeyInput", {
-    Title = "ใส่ Key",
-    Placeholder = "Enter key...",
-    Callback = function(text)
-        SavedInput = text
-    end
-})
-
--- =========================
 --      LOAD MAIN SYSTEM
 -- =========================
 local function LoadMain()
-    if Unlocked then return end
-    Unlocked = true
 
     -- 1. PLAYER TAB
     local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
@@ -63,8 +44,6 @@ local function LoadMain()
             if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
         end
     })
-
- 
 
     -- 2. SCRIPTS TAB
     local ScriptTab = Window:AddTab({ Title = "Scripts", Icon = "code" })
@@ -86,7 +65,7 @@ local function LoadMain()
     SpeedTab:AddSlider("TPWalkSlider", {Title = "ความเร็ว TPWalk", Min = 1, Max = 30, Default = 6, Rounding = 1, Callback = function(v) TPWalkSpeed = v end})
     SpeedTab:AddToggle("InfJumpTog", {Title = "เปิดกระโดดไม่จำกัด", Default = false, Callback = function(v) InfiniteJumpEnabled = v end})
 
-    RunService.RenderStepped:Connect(function(dt)
+    RunService.Heartbeat:Connect(function(dt)
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -95,8 +74,8 @@ local function LoadMain()
             if SpeedEnabled then hum.WalkSpeed = CurrentSpeed else hum.WalkSpeed = 16 end
             if TPWalkEnabled and hum.MoveDirection.Magnitude > 0 then
                 local targetVelocity = hum.MoveDirection.Unit * TPWalkSpeed
-                currentVelocity = currentVelocity:Lerp(targetVelocity, 0.15)
-                hrp.CFrame = hrp.CFrame + (currentVelocity * dt * 60)
+                currentVelocity = currentVelocity:Lerp(targetVelocity, 0.1)
+                hrp.CFrame = hrp.CFrame + (currentVelocity * dt * 35)
             else currentVelocity = Vector3.new() end
         end
     end)
@@ -177,7 +156,7 @@ local function LoadMain()
     })
 
     task.spawn(function()
-        while true do task.wait(2) SitPlayerDrop:SetValues(GetPlayers()) end
+        while true do task.wait(5) SitPlayerDrop:SetValues(GetPlayers()) end
     end)
 
     SitTab:AddButton({ Title = "นั่งบนหัว 🪑", Callback = function() SitType = "Head" StartSit() end })
@@ -222,20 +201,8 @@ local function LoadMain()
     ContactTab:AddButton({ Title = "Instagram", Callback = function() setclipboard("https://www.instagram.com/ezmxyxii/") end })
 end
 
--- =========================
---      KEY BUTTON
--- =========================
-KeyTab:AddButton({
-    Title = "ยืนยันคีย์",
-    Callback = function()
-        if SavedInput == CorrectKey then
-            Fluent:Notify({ Title = "สำเร็จ", Content = "Key ถูกต้อง ✅", Duration = 2 })
-            LoadMain()
-        else
-            Fluent:Notify({ Title = "ผิดพลาด", Content = "Key ไม่ถูกต้อง ❌", Duration = 3 })
-        end
-    end
-})
+-- ✅ โหลดทันที (ไม่มีคีย์)
+LoadMain()
 
 -- =========================
 --   FLOAT LOGO TOGGLE UI
