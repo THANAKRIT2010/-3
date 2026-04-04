@@ -1,59 +1,458 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
+-- ==========================================
+-- 🛠️ PRE-REQUISITES (ส่วนสำคัญเพื่อให้สคริปต์ทำงาน)
+-- ==========================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
-local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
+local TeleportService = game:GetService("TeleportService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- System Audio
-LocalPlayer.CharacterAdded:Connect(function(newChar)
-    local fakeSound = Instance.new("Sound")
-    fakeSound.Name = "SystemAudio"
-    fakeSound.Volume = 0
-    fakeSound.Looped = true
-    fakeSound.Parent = newChar
-end)
+-- ==========================================
+-- 📜 ส่วนที่ 1: โค้ดหลัก (สคริปต์แรกของคุณ)
+-- ==========================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- =========================
---      CREATE WINDOW
--- =========================
 local Window = Fluent:CreateWindow({
-    Title = "TK669 ไม่อนุญาติให้ไปเเจกต่อ",
-    SubTitle = "Script Premium💯",
+    Title = "Script Premium [🔫🌊!]🎐City 2.0",
+    SubTitle = "by ADMIN TK1669",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
-    Theme = "Dark",
+    Acrylic = true,
+    Theme = "Aqua",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- =========================
---      LOAD MAIN SYSTEM
--- =========================
-local function LoadMain()
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
-    -- 1. PLAYER TAB
-    local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
-    
+Tabs.Main:AddSlider("Slider", {
+    Title = "Slider",
+    Default = 3,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(Value) print("Slider:", Value) end
+})
+
+Tabs.Main:AddDropdown("Dropdown", {
+    Title = "Dropdown",
+    Values = {"one", "two", "four"},
+    Default = "four"
+})
+
+Tabs.Main:AddDropdown("MultiDropdown", {
+    Title = "Dropdown (multi)",
+    Values = {"three", "five", "seven"},
+    Multi = true,
+    Default = {"three", "five", "seven"}
+})
+
+Tabs.Main:AddColorpicker("Color1", {
+    Title = "Colorpicker",
+    Default = Color3.fromRGB(0,255,100)
+})
+
+Tabs.Main:AddColorpicker("Color2", {
+    Title = "Colorpicker (Transparency)",
+    Default = Color3.fromRGB(0,170,255)
+})
+
+Tabs.Main:AddKeybind("Keybind", {
+    Title = "Keybind",
+    Default = "MB2",
+    Callback = function() print("Key pressed") end
+})
+
+Tabs.Main:AddInput("Input", {
+    Title = "Input",
+    Default = "Default",
+    Placeholder = "พิมพ์...",
+    Numeric = false
+})
+
+Tabs.Main:AddButton({
+    Title = "Test Button",
+    Description = "กดเพื่อทดสอบ",
+    Callback = function()
+        Fluent:Notify({
+            Title = "Clicked!",
+            Content = "ปุ่มทำงานแล้ว",
+            Duration = 2
+        })
+    end
+})
+
+-- ฟังก์ชันที่เก็บ Tab อื่นๆ ไว้
+local function LoadMain()
+    local PlayerTab = Window:AddTab({ Title = "Script Player V 2.0", Icon = "user" })
     PlayerTab:AddButton({
         Title = "รีเซ็ตตัวละคร",
-        Callback = function()
-            if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
+        Callback = function() if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end end
+    })
+local NoclipEnabled = false
+PlayerTab:AddToggle("NoclipTog", {
+    Title = "เปิด Noclip (เดินทะลุ)",
+    Default = false,
+    Callback = function(v)
+        NoclipEnabled = v
+        RunService.Stepped:Connect(function()
+            if NoclipEnabled and LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+})
+
+PlayerTab:AddButton({
+    Title = "เปิดระบบบิน (Fly/Admin)",
+    Description = "เรียกใช้ Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+PlayerTab:AddButton({
+    Title = "เปิดโหมดอมตะ (God Mode)",
+    Description = "อาจใช้ไม่ได้กับบางแมพที่มีระบบป้องกัน",
+    Callback = function()
+        local Cam = workspace.CurrentCamera
+        local Pos, Rot = Cam.CFrame.Position, Cam.CFrame.Rotation
+        local Character = LocalPlayer.Character
+        local FHumanoid = Character:FindFirstChildOfClass("Humanoid")
+        
+        local NewCharacter = Character:Clone()
+        NewCharacter.Parent = workspace
+        LocalPlayer.Character = NewCharacter
+        
+        FHumanoid:Destroy()
+        RunService.RenderStepped:Wait()
+        Cam.CFrame = CFrame.new(Pos) * Rot
+    end
+})
+
+local Clicking = false
+PlayerTab:AddToggle("AutoClick", {
+    Title = "เปิดคลิกอัตโนมัติ (Auto Clicker)",
+    Default = false,
+    Callback = function(v)
+        Clicking = v
+        spawn(function()
+            while Clicking do
+                task.wait()
+                local vim = game:GetService("VirtualInputManager")
+                vim:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            end
+        end)
+    end
+})
+
+local Spinning = false
+PlayerTab:AddToggle("SpinBot", {
+    Title = "เปิดตัวหมุน (Spinbot)",
+    Default = false,
+    Callback = function(v)
+        Spinning = v
+        spawn(function()
+            while Spinning do
+                task.wait()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(20), 0)
+                end
+            end
+        end)
+    end
+})
+
+PlayerTab:AddSlider("HitboxSlider", {
+    Title = "ขยายขนาดตัวคนอื่น (Hitbox)",
+    Default = 2,
+    Min = 2,
+    Max = 20,
+    Rounding = 1,
+    Callback = function(Value)
+        for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+            if v.Name ~= LocalPlayer.Name and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                v.Character.HumanoidRootPart.Size = Vector3.new(Value, Value, Value)
+                v.Character.HumanoidRootPart.Transparency = 0.7
+                v.Character.HumanoidRootPart.CanCollide = false
+            end
+        end
+    end
+})
+
+PlayerTab:AddToggle("AntiRagdoll", {
+    Title = "ป้องกันตัวพับ (Anti-Ragdoll)",
+    Default = false,
+    Callback = function(v)
+        _G.AntiRagdoll = v
+        task.spawn(function()
+            while _G.AntiRagdoll do
+                task.wait()
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+                    end
+                end)
+            end
+        end)
+    end
+})
+
+local RainbowLoop = false
+PlayerTab:AddToggle("RainbowChar", {
+    Title = "ตัวละครสีรุ้ง (Rainbow Body)",
+    Default = false,
+    Callback = function(v)
+        RainbowLoop = v
+        task.spawn(function()
+            while RainbowLoop do
+                local Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Color = Color
+                    end
+                end
+                task.wait()
+            end
+        end)
+    end
+})
+
+PlayerTab:AddSlider("GravitySlider", {
+    Title = "ปรับแรงโน้มถ่วง (Gravity)",
+    Default = 196.2,
+    Min = 0,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
+        workspace.Gravity = Value
+    end
+})
+
+local PlayerTab = Window:AddTab({ Title = "Script Player V 2.1", Icon = "user" })
+
+PlayerTab:AddSection("Basic Movement")
+PlayerTab:AddButton({
+    Title = "คลิกเพื่อลบของ (Ctrl + Click)",
+    Description = "กด Ctrl ค้างไว้แล้วคลิกที่วัตถุเพื่อลบออก",
+    Callback = function()
+        local Mouse = LocalPlayer:GetMouse()
+        Mouse.Button1Down:Connect(function()
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+                if Mouse.Target then
+                    Mouse.Target:Destroy()
+                end
+            end
+        end)
+        Fluent:Notify({ Title = "Click Delete", Content = "ระบบลบของพร้อมใช้งาน!", Duration = 3 })
+    end
+})
+PlayerTab:AddSection("Cheats & Exploit")
+local FullBrightEnabled = false
+PlayerTab:AddToggle("FullBright", {
+    Title = "เปิดโหมดสว่างจ้า (Full Bright)",
+    Default = false,
+    Callback = function(v)
+        FullBrightEnabled = v
+        if FullBrightEnabled then
+            game:GetService("Lighting").Brightness = 2
+            game:GetService("Lighting").ClockTime = 14
+            game:GetService("Lighting").FogEnd = 100000
+            game:GetService("Lighting").GlobalShadows = false
+        else
+            game:GetService("Lighting").Brightness = 1
+            game:GetService("Lighting").ClockTime = 12
+            game:GetService("Lighting").GlobalShadows = true
+        end
+    end
+})
+
+PlayerTab:AddSection("Fun & Visual")
+local WalkOnWater = false
+PlayerTab:AddToggle("WalkWater", {
+    Title = "เดินบนผิวน้ำ (Walk on Water)",
+    Default = false,
+    Callback = function(v)
+        WalkOnWater = v
+        spawn(function()
+            while WalkOnWater do
+                task.wait()
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        local ray = Ray.new(char.HumanoidRootPart.Position, Vector3.new(0, -5, 0))
+                        local hit, pos = workspace:FindPartOnRay(ray, char)
+                        if hit and hit.Name == "Water" or hit and hit.ClassName == "Terrain" then
+                            char.HumanoidRootPart.Velocity = Vector3.new(char.HumanoidRootPart.Velocity.X, 0, char.HumanoidRootPart.Velocity.Z)
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+})
+
+PlayerTab:AddSection("Basic Movement")
+PlayerTab:AddToggle("AntiFling", {
+    Title = "ป้องกันตัวกระเด็น (Anti-Fling)",
+    Default = false,
+    Callback = function(v)
+        _G.AntiFling = v
+        task.spawn(function()
+            while _G.AntiFling do
+                task.wait()
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.Velocity = Vector3.new(0, 0, 0)
+                                part.RotVelocity = Vector3.new(0, 0, 0)
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+})
+
+PlayerTab:AddSection("Cheats & Exploit")
+local InvisibleEnabled = false
+local OriginalTransparencies = {}
+
+PlayerTab:AddToggle("InvisTog", {
+    Title = "โหมดล่องหน (Invisible)",
+    Description = "ทำให้ตัวละครหายไป/กลับมามองเห็น",
+    Default = false,
+    Callback = function(Value)
+        InvisibleEnabled = Value
+        local char = LocalPlayer.Character
+        if not char then return end
+
+        if InvisibleEnabled then
+            -- เก็บค่าความโปร่งใสเดิมและทำให้ล่องหน
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") or v:IsA("Decal") then
+                    OriginalTransparencies[v] = v.Transparency
+                    v.Transparency = 1
+                end
+            end
+            
+            -- ลบ Nametag (ถ้ามี)
+            if char:FindFirstChild("Head") and char.Head:FindFirstChild("nametag") then
+                char.Head.nametag.Enabled = false -- ใช้ Enabled แทนการ Destroy เพื่อให้เอากลับมาได้
+            end
+            
+            Fluent:Notify({ Title = "Invisible", Content = "เปิดโหมดล่องหนแล้ว", Duration = 3 })
+        else
+            -- เอากลับมาให้มองเห็นเหมือนเดิม
+            for part, trans in pairs(OriginalTransparencies) do
+                if part and part.Parent then
+                    part.Transparency = trans
+                end
+            end
+            
+            -- เปิด Nametag กลับมา
+            if char:FindFirstChild("Head") and char.Head:FindFirstChild("nametag") then
+                char.Head.nametag.Enabled = true
+            end
+            
+            OriginalTransparencies = {} -- ล้างค่าที่เก็บไว้
+            Fluent:Notify({ Title = "Invisible", Content = "ปิดโหมดล่องหนแล้ว", Duration = 3 })
+        end
+    end
+})
+
+local Section3 = PlayerTab:AddSection("Fun & Visual")
+
+    -- 🟢 1. Spinbot (หมุนตัว) - มีอยู่แล้วในโค้ดเดิม
+    Section3:AddToggle("SpinBot", {
+        Title = "Spinbot (หมุนตัว)",
+        Description = "ทำให้ตัวละครหมุนวนไปเรื่อยๆ",
+        Default = false,
+        Callback = function(v)
+            _G.Spinning = v
+            task.spawn(function()
+                while _G.Spinning do
+                    task.wait()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(20), 0)
+                    end
+                end
+            end)
         end
     })
 
-    -- 2. SCRIPTS TAB
+    -- 🟢 2. Rainbow Character (ตัวละครสีรุ้ง) - มีอยู่แล้วในโค้ดเดิม
+    Section3:AddToggle("RainbowChar", {
+        Title = "Rainbow Character",
+        Description = "เปลี่ยนสีตัวละครเป็นสีรุ้งแบบ Loop",
+        Default = false,
+        Callback = function(v)
+            _G.RainbowLoop = v
+            task.spawn(function()
+                while _G.RainbowLoop do
+                    local Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then part.Color = Color end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    })
+
+    -- 🟢 3. Head Size (หัวโต) - เพิ่มใหม่ เจ๋งมาก!
+    Section3:AddSlider("HeadSizeSlider", {
+        Title = "Head Size (ขยายหัว)",
+        Description = "ปรับขนาดหัวของตัวเราเอง (ขำๆ)",
+        Default = 1,
+        Min = 1,
+        Max = 10,
+        Rounding = 1,
+        Callback = function(Value)
+            pcall(function()
+                local head = LocalPlayer.Character:FindFirstChild("Head")
+                if head then
+                    head.Size = Vector3.new(Value * 1.2, Value * 1.2, Value * 1.2) -- ปรับสเกลให้พอดี
+                end
+            end)
+        end
+    })
+
+    -- 🟢 4. Field of View (ระยะสายตา) - เพิ่มใหม่ ให้ภาพดูเท่แบบสตรีมเมอร์
+    Section3:AddSlider("FOVSlider", {
+        Title = "Field of View (FOV)",
+        Description = "ปรับระยะการมองเห็นของกล้องให้กว้างขึ้น",
+        Default = 70,
+        Min = 30,
+        Max = 120,
+        Rounding = 1,
+        Callback = function(Value)
+            workspace.CurrentCamera.FieldOfView = Value
+        end
+    })
+
     local ScriptTab = Window:AddTab({ Title = "Scripts", Icon = "code" })
     ScriptTab:AddButton({ Title = "AUTO มันนี่💵", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/Thai-2/refs/heads/main/TK1669", true))() end })
     ScriptTab:AddButton({ Title = "BOOTS FPS🍃", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Boostfps-26436"))() end })
-    ScriptTab:AddButton({ Title = "SET TELEPORT📍", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqthanakrit99-code/-/refs/heads/main/%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B2%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B8%E0%B8%94%E0%B8%A7%E0%B8%B2%E0%B8%9B", true))() end })
+    ScriptTab:AddButton({ Title = "SET TELEPORT📍", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/qqthanakrit99-code/-/refs/heads/main/%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B3%E0%B8%88%E0%B8%B8%E0%B8%94%E0%B8%A7%E0%B8%B2%E0%B8%9B", true))() end })
     ScriptTab:AddButton({ Title = "AUTO TOOL⚡", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/THANAKRIT2010/-3/refs/heads/main/%E0%B8%A5%E0%B9%87%E0%B8%AD%E0%B8%81%20AUTO%20TOOL"))() end })
 
-    -- 3. SPEED TAB
-    local SpeedTab = Window:AddTab({ Title = "Speed", Icon = "zap" })
+    local SpeedTab = Window:AddTab({ 
+    Title = "⚡ Speed", 
+    Icon = "" -- ปล่อยว่างไว้ถ้า Icon ไม่ทำงาน
+})
     local SpeedEnabled, CurrentSpeed = false, 16
     local TPWalkEnabled, TPWalkSpeed = false, 6
     local InfiniteJumpEnabled = false
@@ -69,7 +468,6 @@ local function LoadMain()
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        
         if hum and hrp then
             if SpeedEnabled then hum.WalkSpeed = CurrentSpeed else hum.WalkSpeed = 16 end
             if TPWalkEnabled and hum.MoveDirection.Magnitude > 0 then
@@ -88,17 +486,10 @@ local function LoadMain()
         end
     end)
 
-    -- 4. TELEPORT TAB
     local TeleportTab = Window:AddTab({ Title = "Teleport", Icon = "map-pin" })
     local SelectedTPPlayer = nil
     local function GetPlayers() local t = {} for _,p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(t, p.Name) end end return t end
-
-    local PlayerDrop = TeleportTab:AddDropdown("TPDrop", {
-        Title = "เลือกผู้เล่น",
-        Values = GetPlayers(),
-        Callback = function(v) SelectedTPPlayer = Players:FindFirstChild(v) end
-    })
-    
+    local PlayerDrop = TeleportTab:AddDropdown("TPDrop", { Title = "เลือกผู้เล่น", Values = GetPlayers(), Callback = function(v) SelectedTPPlayer = Players:FindFirstChild(v) end })
     Players.PlayerAdded:Connect(function() PlayerDrop:SetValues(GetPlayers()) end)
     Players.PlayerRemoving:Connect(function() PlayerDrop:SetValues(GetPlayers()) end)
 
@@ -106,111 +497,60 @@ local function LoadMain()
     TeleportTab:AddButton({ Title = "มองจอผู้เล่น", Callback = function() if SelectedTPPlayer and SelectedTPPlayer.Character then Camera.CameraSubject = SelectedTPPlayer.Character:FindFirstChildOfClass("Humanoid") end end })
     TeleportTab:AddButton({ Title = "ยกเลิกมองจอ", Callback = function() if LocalPlayer.Character then Camera.CameraSubject = LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end end })
 
-    -- 5. SIT PLAYER TAB
     local SitTab = Window:AddTab({ Title = "Sit Player", Icon = "user" })
     local SelectedSitPlayer = nil
     local SitType = "Head"
     local AlignPos, AlignOri, MyAttachment, TargetAttachment
-
-    local function StopSit()
-        if AlignPos then AlignPos:Destroy() AlignPos = nil end
-        if AlignOri then AlignOri:Destroy() AlignOri = nil end
-        if MyAttachment then MyAttachment:Destroy() MyAttachment = nil end
-        if TargetAttachment then TargetAttachment:Destroy() TargetAttachment = nil end
-    end
-
+    local function StopSit() if AlignPos then AlignPos:Destroy() AlignPos = nil end if AlignOri then AlignOri:Destroy() AlignOri = nil end if MyAttachment then MyAttachment:Destroy() MyAttachment = nil end if TargetAttachment then TargetAttachment:Destroy() TargetAttachment = nil end end
     local function StartSit()
         StopSit()
         if not (SelectedSitPlayer and SelectedSitPlayer.Character and LocalPlayer.Character) then return end
         local targetHRP = SelectedSitPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myChar = LocalPlayer.Character
-        local myHRP = myChar:FindFirstChild("HumanoidRootPart")
-        local myHum = myChar:FindFirstChildOfClass("Humanoid")
+        local myHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myHum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if not (targetHRP and myHRP and myHum) then return end
-
         myHum.Sit = true
         myHum:ChangeState(Enum.HumanoidStateType.Seated)
         MyAttachment = Instance.new("Attachment", myHRP)
         TargetAttachment = Instance.new("Attachment", targetHRP)
-
-        if SitType == "Head" then
-            TargetAttachment.Position = Vector3.new(0, 2.5, 0)
-        elseif SitType == "Back" then
-            TargetAttachment.Position = Vector3.new(0, 0.5, -1.2)
-            TargetAttachment.Orientation = Vector3.new(0, 180, 0)
-        end
-
-        AlignPos = Instance.new("AlignPosition", myHRP)
-        AlignPos.Attachment0, AlignPos.Attachment1 = MyAttachment, TargetAttachment
-        AlignPos.RigidityEnabled = true
-
-        AlignOri = Instance.new("AlignOrientation", myHRP)
-        AlignOri.Attachment0, AlignOri.Attachment1 = MyAttachment, TargetAttachment
-        AlignOri.RigidityEnabled = true
+        if SitType == "Head" then TargetAttachment.Position = Vector3.new(0, 2.5, 0) elseif SitType == "Back" then TargetAttachment.Position = Vector3.new(0, 0.5, -1.2) TargetAttachment.Orientation = Vector3.new(0, 180, 0) end
+        AlignPos = Instance.new("AlignPosition", myHRP) AlignPos.Attachment0, AlignPos.Attachment1 = MyAttachment, TargetAttachment AlignPos.RigidityEnabled = true
+        AlignOri = Instance.new("AlignOrientation", myHRP) AlignOri.Attachment0, AlignOri.Attachment1 = MyAttachment, TargetAttachment AlignOri.RigidityEnabled = true
     end
 
-    local SitPlayerDrop = SitTab:AddDropdown("SitDrop", {
-        Title = "เลือกผู้เล่น",
-        Values = GetPlayers(),
-        Callback = function(v) SelectedSitPlayer = Players:FindFirstChild(v) end
-    })
-
-    task.spawn(function()
-        while true do task.wait(5) SitPlayerDrop:SetValues(GetPlayers()) end
-    end)
-
+    local SitPlayerDrop = SitTab:AddDropdown("SitDrop", { Title = "เลือกผู้เล่น", Values = GetPlayers(), Callback = function(v) SelectedSitPlayer = Players:FindFirstChild(v) end })
+    task.spawn(function() while true do task.wait(5) SitPlayerDrop:SetValues(GetPlayers()) end end)
     SitTab:AddButton({ Title = "นั่งบนหัว 🪑", Callback = function() SitType = "Head" StartSit() end })
     SitTab:AddButton({ Title = "นั่งติดหลัง 🔙", Callback = function() SitType = "Back" StartSit() end })
     SitTab:AddButton({ Title = "หยุดนั่ง ❌", Callback = function() StopSit() end })
 
-    -- 6. SERVER HOP TAB
     local HopTab = Window:AddTab({ Title = "Server Hop", Icon = "server" })
     local function HopToLowServer()
         local HttpService = game:GetService("HttpService")
         local response = game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
         local data = HttpService:JSONDecode(response)
-        if data and data.data then
-            for _, server in pairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
-                    return
-                end
-            end
-        end
+        if data and data.data then for _, server in pairs(data.data) do if server.playing < server.maxPlayers and server.id ~= game.JobId then TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id) return end end end
     end
-
     HopTab:AddSection("Server Manager")
-    HopTab:AddButton({
-        Title = "🌑 Join Low Player Server",
-        Callback = function()
-            Window:Dialog({
-                Title = "ย้ายเซิร์ฟเวอร์",
-                Content = "ต้องการย้ายไปห้องคนน้อยใช่ไหม?",
-                Buttons = {
-                    { Title = "ยืนยัน", Callback = HopToLowServer },
-                    { Title = "ยกเลิก" }
-                }
-            })
-        end
-    })
+    HopTab:AddButton({ Title = "🌑 Join Low Player Server", Callback = function() Window:Dialog({ Title = "ย้ายเซิร์ฟเวอร์", Content = "ต้องการย้ายไปห้องคนน้อยใช่ไหม?", Buttons = { { Title = "ยืนยัน", Callback = HopToLowServer }, { Title = "ยกเลิก" } } }) end })
 
-    -- 7. CONTACT TAB
     local ContactTab = Window:AddTab({ Title = "Contact", Icon = "phone" })
     ContactTab:AddButton({ Title = "รีเข้าแมพ", Callback = function() TeleportService:Teleport(game.PlaceId) end })
     ContactTab:AddButton({ Title = "Discord", Callback = function() setclipboard("https://discord.gg/XKJTssDUSR") end })
     ContactTab:AddButton({ Title = "Instagram", Callback = function() setclipboard("https://www.instagram.com/ezmxyxii/") end })
 end
 
--- ✅ โหลดทันที (ไม่มีคีย์)
+
+
+-- 🔥 เรียกใช้ฟังก์ชันที่เก็บ Tab อื่นๆ ไว้ (เพื่อให้มันแสดงขึ้นมา)
 LoadMain()
 
 -- =========================
---   FLOAT LOGO TOGGLE UI
+--    FLOAT LOGO TOGGLE UI
 -- =========================
 pcall(function() if game.CoreGui:FindFirstChild("TK669_TOGGLE") then game.CoreGui.TK669_TOGGLE:Destroy() end end)
 local ToggleGui = Instance.new("ScreenGui", game.CoreGui)
 ToggleGui.Name = "TK669_TOGGLE"
-
 local ToggleBtn = Instance.new("ImageButton", ToggleGui)
 ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
 ToggleBtn.Position = UDim2.new(0.5, -25, 0, 20)
@@ -218,27 +558,22 @@ ToggleBtn.BackgroundTransparency = 1
 ToggleBtn.Image = "rbxassetid://73593540273101"
 
 local dragging, dragInput, dragStart, startPos
-ToggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = ToggleBtn.Position
-        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-    end
-end)
+ToggleBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true dragStart = input.Position startPos = ToggleBtn.Position input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end) end end)
 ToggleBtn.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then local delta = input.Position - dragStart ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
 
 local UIVisible = false
-ToggleBtn.MouseButton1Click:Connect(function()
-    UIVisible = not UIVisible
-    Window:Minimize(UIVisible)
-end)
+ToggleBtn.MouseButton1Click:Connect(function() UIVisible = not UIVisible Window:Minimize(UIVisible) end)
 
 Window:SelectTab(1)
-Fluent:Notify({Title = "Server Utility", Content = "UI พร้อมใช้งานแล้วครับพี่!", Duration = 3})
+
+-- ==========================================
+-- ⚙️ ส่วนที่ 2: SETTINGS (ส่วนที่คุณเพิ่มมา)
+-- ==========================================
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+SaveManager:LoadAutoloadConfig()
+
+Fluent:Notify({ Title = "Loaded", Content = "UI พร้อมใช้งานครบทุกฟังก์ชัน", Duration = 3 })
